@@ -6,8 +6,8 @@ import {
     BrainCircuit, Download, CheckCircle2,
     Stethoscope, ClipboardCheck
 } from 'lucide-react';
-import ChatBox from '@/components/Chat/ChatBox';
-import Results from '@/components/Dashboard/Results';
+import ChatBox from '@/components/chat/chatbox';
+import Results from '@/components/dashboard/results';
 
 export default function HealthPlatform() {
     const [showApp, setShowApp] = useState(false);

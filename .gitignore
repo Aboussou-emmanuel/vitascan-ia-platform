@@ -1,0 +1,14 @@
+# Dépendances
+node_modules/
+__pycache__/
+venv/
+.env
+
+# Next.js
+.next/
+out/
+build/
+
+# Divers
+.DS_Store
+*.log

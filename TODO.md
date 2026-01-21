@@ -1,15 +1,11 @@
-# TODO: Fix Health AI Platform for Functional Site
+# TODO: Implement Fixes for Health AI Platform
 
 ## Backend Fixes
-- [ ] Fix backend/main.py: Add missing imports (FastAPI, CORSMiddleware, HTTPException, json), use config for model and API key, correct Groq model.
-- [ ] Create backend/core/config.py: Load env vars for MODEL_NAME and GROQ_API_KEY.
-- [ ] Implement backend/services/ai_engine.py: Handle the chat completion logic.
-- [ ] Update backend/requirements.txt: Add pydantic.
-
-## Frontend Fixes
-- [ ] Check frontend/lib/api.ts: Ensure base URL points to backend (localhost:8000).
+- [x] Update backend/core/config.py: Change MODEL_NAME to "llama-3.3-70b-versatile"
+- [x] Update backend/services/ai_engine.py: Update system prompt to match main.py's detailed prompt, and change m.dict() to m.model_dump()
+- [x] Update backend/main.py: Import from config, use config.MODEL_NAME and config.GROQ_API_KEY, and refactor to use ai_engine.process_chat instead of inline logic
 
 ## Testing
-- [ ] Run backend server.
-- [ ] Run frontend server.
-- [ ] Verify functionality.
+- [ ] Run backend server with uvicorn
+- [ ] Run frontend server with npm run dev
+- [ ] Test the chat functionality

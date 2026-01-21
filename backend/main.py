@@ -6,6 +6,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import List, Optional
+from core.config import MODEL_NAME, GROQ_API_KEY
+from services.ai_engine import process_chat
 
 load_dotenv()
 
@@ -13,7 +15,7 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 client = OpenAI(
-    api_key=os.getenv("GROQ_API_KEY"),
+    api_key=GROQ_API_KEY,
     base_url=os.getenv("GROQ_BASE_URL")
 )
 
@@ -26,24 +28,8 @@ class ChatSession(BaseModel):
 
 @app.post("/chat")
 async def chat(session: ChatSession):
-    # Prompt de secours pour forcer la structure
-    system_prompt = (
-        "Tu es un assistant médical. Réponds EXCLUSIVEMENT en JSON. "
-        "Après 5 questions, tu DOIS fournir l'analyse finale. "
-        "Structure : {\"is_final\": false, \"message\": \"...\"} "
-        "OU {\"is_final\": true, \"message\": \"Terminé\", \"analysis\": {\"urgency_level\": \"low\", \"probabilities\": [{\"condition\": \"Exemple\", \"score\": 90}], \"prevention\": [\"Repos\"]}}"
-    )
-    
     try:
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "system", "content": system_prompt}] + [m.model_dump() for m in session.history],
-            response_format={"type": "json_object"}
-        )
-        
-        result = json.loads(response.choices[0].message.content)
-        return result
-        
+        return await process_chat(client, session, MODEL_NAME)
     except Exception as e:
         print(f"Erreur Serveur: {e}")
         # En cas de bug, on renvoie une réponse JSON valide pour éviter le crash Frontend

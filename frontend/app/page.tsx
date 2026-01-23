@@ -1,8 +1,9 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Activity, Shield, Clock, MousePointer2,
-    BrainCircuit, Download, Star, Quote
+    BrainCircuit, Download, Star, Quote,
+    Moon, Sun, History, ExternalLink, Trash2
 } from 'lucide-react';
 
 import ChatBox from '../components/chat/chatbox';
@@ -11,9 +12,24 @@ import Results from '../components/dashboard/results';
 export default function HealthPlatform() {
     const [showApp, setShowApp] = useState(false);
     const [analysis, setAnalysis] = useState<any>(null);
+    const [isDarkMode, setIsDarkMode] = useState(false); // Option: Dark Mode
+    const [history, setHistory] = useState<any[]>([]); // Option: Historique
     const appRef = useRef<HTMLDivElement>(null);
 
-    // Fonction simplifiée : On lance la consultation directement
+    // Charger l'historique et le thème au démarrage
+    useEffect(() => {
+        const savedHistory = localStorage.getItem('vitascan_history');
+        if (savedHistory) setHistory(JSON.parse(savedHistory));
+
+        const savedTheme = localStorage.getItem('vitascan_theme');
+        if (savedTheme === 'dark') setIsDarkMode(true);
+    }, []);
+
+    // Sauvegarder le thème
+    useEffect(() => {
+        localStorage.setItem('vitascan_theme', isDarkMode ? 'dark' : 'light');
+    }, [isDarkMode]);
+
     const startConsultation = () => {
         setShowApp(true);
         setTimeout(() => {
@@ -21,25 +37,46 @@ export default function HealthPlatform() {
         }, 100);
     };
 
+    const handleAnalysisComplete = (data: any) => {
+        setAnalysis(data);
+        const newEntry = { ...data, date: new Date().toLocaleDateString('fr-FR') };
+        const newHistory = [newEntry, ...history].slice(0, 5);
+        setHistory(newHistory);
+        localStorage.setItem('vitascan_history', JSON.stringify(newHistory));
+    };
+
+    const clearHistory = () => {
+        setHistory([]);
+        localStorage.removeItem('vitascan_history');
+    };
+
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+        <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
             {/* --- NAVBAR --- */}
-            <nav className="flex justify-between items-center px-8 py-6 max-w-7xl mx-auto no-print">
+            <nav className={`flex justify-between items-center px-8 py-6 max-w-7xl mx-auto no-print`}>
                 <div className="flex items-center gap-2 font-black text-2xl text-blue-600">
                     <Activity size={32} />
                     <span>VitaScan IA</span>
                 </div>
-                <div className="hidden md:flex gap-8 font-medium text-slate-600">
-                    <a href="#services" className="hover:text-blue-600 transition">Services</a>
-                    <a href="#methode" className="hover:text-blue-600 transition">Méthode</a>
-                    <a href="#avis" className="hover:text-blue-600 transition">Avis</a>
+                <div className="flex items-center gap-6">
+                    <div className="hidden md:flex gap-8 font-medium text-slate-500">
+                        <a href="#services" className="hover:text-blue-600 transition">Services</a>
+                        <a href="#avis" className="hover:text-blue-600 transition">Avis</a>
+                    </div>
+                    {/* Bouton Dark Mode */}
+                    <button
+                        onClick={() => setIsDarkMode(!isDarkMode)}
+                        className={`p-2 rounded-xl transition ${isDarkMode ? 'bg-slate-800 text-yellow-400' : 'bg-white shadow-sm text-slate-600'}`}
+                    >
+                        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                    </button>
+                    <button
+                        onClick={startConsultation}
+                        className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:shadow-lg transition"
+                    >
+                        {analysis ? "Mon Bilan" : "Démarrer"}
+                    </button>
                 </div>
-                <button
-                    onClick={startConsultation}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:shadow-lg transition"
-                >
-                    {analysis ? "Mon Bilan" : "Démarrer"}
-                </button>
             </nav>
 
             {/* --- HERO SECTION --- */}
@@ -48,7 +85,6 @@ export default function HealthPlatform() {
                 style={{ backgroundImage: "url('/images/img6.jpg')" }}
             >
                 <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"></div>
-
                 <div className="relative z-10">
                     <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-xs font-black mb-6 uppercase tracking-widest inline-block">
                         IA Médicale Llama 3.3
@@ -57,9 +93,6 @@ export default function HealthPlatform() {
                         Votre santé, <br />
                         <span className="text-blue-400">analysée en direct.</span>
                     </h1>
-                    <p className="text-lg text-slate-100 max-w-2xl mb-10 leading-relaxed font-medium">
-                        Décrivez vos symptômes à notre IA et obtenez instantanément un bilan prédictif fiable et privé.
-                    </p>
                     <button
                         onClick={startConsultation}
                         className="bg-white text-blue-600 px-10 py-5 rounded-2xl font-bold text-lg hover:scale-105 transition shadow-2xl flex items-center justify-center gap-3 mx-auto"
@@ -69,105 +102,89 @@ export default function HealthPlatform() {
                 </div>
             </header>
 
-            {/* --- SECTION SERVICES --- */}
-            <section id="services" className="bg-white py-20 no-print border-y border-slate-100 mt-20">
-                <div className="max-w-7xl mx-auto px-8 text-center">
-                    <h2 className="text-3xl font-black mb-12">Nos points forts</h2>
-                    <div className="grid md:grid-cols-3 gap-8 text-left">
-                        <ServiceCard icon={<BrainCircuit className="text-blue-600" />} title="IA Prédictive" desc="Analyse avancée de vos symptômes." />
-                        <ServiceCard icon={<Shield className="text-emerald-500" />} title="100% Privé" desc="Données non stockées." />
-                        <ServiceCard icon={<Clock className="text-orange-500" />} title="24h/7" desc="Toujours disponible." />
+            {/* --- SECTION HISTORIQUE (Option 1) --- */}
+            {history.length > 0 && !showApp && (
+                <section className="max-w-7xl mx-auto px-8 py-12 no-print">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                            <History size={20} /> Mes dernières analyses
+                        </h2>
+                        <button onClick={clearHistory} className="text-red-500 text-sm flex items-center gap-1 hover:underline">
+                            <Trash2 size={14} /> Effacer
+                        </button>
                     </div>
-                </div>
-            </section>
-
-            {/* --- SECTION MÉTHODE --- */}
-            <section id="methode" className="py-20 bg-slate-50 no-print">
-                <div className="max-w-7xl mx-auto px-8">
-                    <h2 className="text-3xl font-black mb-12 text-center">Notre Méthode</h2>
-                    <div className="grid md:grid-cols-4 gap-6">
-                        <Step number="01" title="Symptômes" desc="Décrivez précisément vos ressentis." />
-                        <Step number="02" title="Analyse IA" desc="Traitement par Llama 3.3." />
-                        <Step number="03" title="Validation" desc="Protocoles médicaux croisés." />
-                        <Step number="04" title="Bilan" desc="Rapport détaillé généré." />
+                    <div className="grid md:grid-cols-3 gap-4">
+                        {history.map((item, idx) => (
+                            <div key={idx} className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+                                <p className="text-xs text-blue-500 font-bold mb-1">{item.date}</p>
+                                <p className="text-sm font-medium truncate">{item.summary || "Analyse de santé"}</p>
+                            </div>
+                        ))}
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
-            {/* --- SECTION AVIS --- */}
-            <section id="avis" className="bg-white py-20 no-print">
-                <div className="max-w-7xl mx-auto px-8 text-center">
-                    <h2 className="text-3xl font-black mb-12">Avis de nos utilisateurs</h2>
-                    <div className="grid md:grid-cols-3 gap-8 text-left">
-                        <TestimonialCard name="Dr. Marc L." role="Généraliste" text="Un excellent outil de pré-diagnostic qui aide les patients à mieux formuler leurs symptômes." />
-                        <TestimonialCard name="Sarah J." role="Utilisatrice" text="Très rapide et rassurant. Le bilan PDF est complet et facile à partager avec mon médecin." />
-                        <TestimonialCard name="Thomas B." role="Utilisateur" text="L'IA est impressionnante de précision. On se sent vraiment écouté et guidé." />
-                    </div>
-                </div>
-            </section>
-
-            {/* --- APPLICATION SECTION (Débloquée directement) --- */}
+            {/* --- APPLICATION SECTION --- */}
             <section ref={appRef} className={`py-20 transition-all duration-700 ${showApp ? 'opacity-100 block' : 'opacity-0 hidden'}`}>
                 {showApp && (
                     <div className="max-w-4xl mx-auto px-6">
                         {!analysis ? (
-                            <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl border border-blue-50">
-                                <ChatBox onComplete={(data: any) => setAnalysis(data)} />
+                            <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} p-8 rounded-[2.5rem] shadow-2xl border border-blue-50`}>
+                                <ChatBox onComplete={handleAnalysisComplete} />
                             </div>
                         ) : (
                             <div className="space-y-6">
-                                <div className="flex justify-end no-print">
+                                <div className="flex justify-between items-center no-print">
+                                    <button onClick={() => setAnalysis(null)} className="text-blue-600 font-bold">← Nouvelle analyse</button>
                                     <button onClick={() => window.print()} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2">
                                         <Download size={18} /> Télécharger PDF
                                     </button>
                                 </div>
+
                                 <Results analysis={analysis} />
+
+                                {/* Option 2: Lien Rendez-vous */}
+                                <div className={`mt-8 p-8 rounded-[2rem] border-2 border-dashed ${isDarkMode ? 'border-slate-700 bg-slate-800/50' : 'border-blue-100 bg-blue-50/50'} text-center`}>
+                                    <h3 className="text-xl font-bold mb-2">Besoin d'un avis médical approfondi ?</h3>
+                                    <p className={`mb-6 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Consultez un spécialiste près de chez vous en quelques clics.</p>
+                                    <a
+                                        href="https://www.doctolib.fr"
+                                        target="_blank"
+                                        className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-blue-700 transition"
+                                    >
+                                        Prendre rendez-vous <ExternalLink size={20} />
+                                    </a>
+                                </div>
                             </div>
                         )}
                     </div>
                 )}
             </section>
 
-            <footer className="bg-slate-900 text-slate-500 py-12 text-center no-print">
-                <p>© 2026 VitaScan IA</p>
+            <section id="services" className={`py-20 no-print border-y ${isDarkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
+                <div className="max-w-7xl mx-auto px-8 text-center">
+                    <h2 className="text-3xl font-black mb-12">Nos services</h2>
+                    <div className="grid md:grid-cols-3 gap-8 text-left">
+                        <ServiceCard isDark={isDarkMode} icon={<BrainCircuit className="text-blue-600" />} title="IA Prédictive" desc="Analyse avancée de vos symptômes." />
+                        <ServiceCard isDark={isDarkMode} icon={<Shield className="text-emerald-500" />} title="100% Privé" desc="Données stockées localement." />
+                        <ServiceCard isDark={isDarkMode} icon={<Clock className="text-orange-500" />} title="Historique" desc="Gardez une trace de vos bilans." />
+                    </div>
+                </div>
+            </section>
+
+            <footer className="py-12 text-center text-slate-500 text-sm">
+                <p>© 2026 VitaScan IA • Santé & Technologie</p>
             </footer>
         </div>
     );
 }
 
-// --- COMPOSANTS DE SOUTIEN ---
-function ServiceCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
+function ServiceCard({ icon, title, desc, isDark }: { icon: React.ReactNode, title: string, desc: string, isDark: boolean }) {
     return (
-        <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
+        <div className={`p-8 rounded-[2rem] border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
             <div className="mb-4">{icon}</div>
             <h3 className="font-bold text-xl mb-2">{title}</h3>
             <p className="text-slate-500 text-sm">{desc}</p>
-        </div>
-    );
-}
-
-function Step({ number, title, desc }: { number: string, title: string, desc: string }) {
-    return (
-        <div className="relative p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
-            <span className="text-4xl font-black text-blue-100 absolute top-4 right-4">{number}</span>
-            <h3 className="font-bold text-lg mb-2 relative z-10">{title}</h3>
-            <p className="text-slate-500 text-sm relative z-10">{desc}</p>
-        </div>
-    );
-}
-
-function TestimonialCard({ name, role, text }: { name: string, role: string, text: string }) {
-    return (
-        <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 relative shadow-sm">
-            <Quote className="text-blue-200 absolute top-6 right-6" size={30} />
-            <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => <Star key={i} size={16} className="fill-orange-400 text-orange-400" />)}
-            </div>
-            <p className="text-slate-600 italic mb-6">"{text}"</p>
-            <div>
-                <h4 className="font-bold text-slate-900">{name}</h4>
-                <p className="text-blue-600 text-xs font-medium uppercase tracking-wider">{role}</p>
-            </div>
         </div>
     );
 }

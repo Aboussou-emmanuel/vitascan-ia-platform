@@ -1,17 +1,34 @@
-import './globals.css'
-import { Inter } from 'next/font/google'
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
 
-const inter = Inter({ subsets: ['latin'] })
+const geistSans = Geist({
+    variable: "--font-geist-sans",
+    subsets: ["latin"],
+});
 
-export const metadata = {
-    title: 'HealthCheck AI - Votre bilan de santé intelligent',
-    description: 'Analyse de symptômes assistée par IA',
-}
+const geistMono = Geist_Mono({
+    variable: "--font-geist-mono",
+    subsets: ["latin"],
+});
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const metadata: Metadata = {
+    title: "VitaScan IA - Consultation Médicale",
+    description: "Analyse de santé par intelligence artificielle",
+};
+
+export default function RootLayout({
+    children,
+}: Readonly<{
+    children: React.ReactNode;
+}>) {
     return (
         <html lang="fr">
-            <body className={inter.className}>{children}</body>
+            <body
+                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+            >
+                {children}
+            </body>
         </html>
-    )
+    );
 }
